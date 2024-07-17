@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = 'api_responser'
-  spec.version       = '1.0.0'
+  spec.version       = '1.0.0.7'
   spec.authors       = ['Nazim Mehdiyev']
   spec.email         = ['nazim@mehdiyev.me']
   spec.licenses      = ['MIT']
@@ -17,8 +17,8 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'rails', '~> 6.0'
+  spec.add_dependency 'rails','~> 7.0'
 
-  spec.add_development_dependency 'minitest'
-  spec.add_development_dependency 'webrick'
+  spec.add_development_dependency 'minitest', '~> 5.1'
+  spec.add_development_dependency 'webrick', '~> 1.8'
 end
