@@ -7,7 +7,7 @@ gemspec
 
 # For testing
 group :development, :test do
-  gem 'minitest'
-  gem 'webrick'
-  gem 'rails', '~> 6.0'
+  gem 'minitest', '>= 5.1'
+  gem 'webrick', '~> 1.8'
+  gem 'rails', '~> 7.0'
 end
