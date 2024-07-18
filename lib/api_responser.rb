@@ -48,8 +48,8 @@ module ApiResponser
     error_render(code: 400, message: i18n_message(__method__, status:"error"), debug_message: debug_message, report:report)
   end
 
-  def unauthorized(debug_message = "", report:false)
-    error_render(code: 401, message: i18n_message(__method__, status:"error"), debug_message: debug_message, report:report)
+  def unauthorized(debug_message = "", message: nil,report:false)
+    error_render(code: 401, message: message.nil? ? i18n_message(__method__, status:"error") : message, debug_message: debug_message, report:report)
   end
 
   def forbidden(debug_message = "", report:false)
@@ -105,7 +105,7 @@ module ApiResponser
     @message = message
     @records = records
     @records_count = determine_records_count(records, records_count)
-    {json:ERB.new(file_read("success")).result(binding), status: code}
+    {json: ERB.new(file_read("success")).result(binding), status: code}
   end
 
   def error_render(code: 500, message: "", debug_message: "", report: false)
