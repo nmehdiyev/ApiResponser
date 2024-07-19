@@ -11,16 +11,19 @@ module ApiResponser
     success_render(code: 200, message: i18n_message(__method__, status:"success"), records: records)
   end
 
-  def record_created
-    api_success(code: 201)
+  def record_created(records = nil)
+    api_success(code: 201) if records.nil?
+    success_render(code: 201, message: i18n_message(__method__, status:"success"), records: records) unless records.nil?
   end
 
-  def record_updated
-    api_success(code: 204)
+  def record_updated(records = nil)
+    api_success(code: 204) if records.nil?
+    success_render(code: 204, message: i18n_message(__method__, status:"success"), records: records) unless records.nil?
   end
 
-  def record_deleted
-    api_success(code: 204)
+  def record_deleted(records = nil)
+    api_success(code: 204) if records.nil?
+    success_render(code: 204, message: i18n_message(__method__, status:"success"), records: records) unless records.nil?
   end
 
   # Error responses
