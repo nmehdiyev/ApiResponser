@@ -144,7 +144,7 @@ Templates should be located in **app/views/api_responser/**
 The default templates are:
 #### success.json.erb
 ``` ruby
-{
+"data":{
   "status": "success",
   "code": <%= @code %>,
   "message": "<%= @message %>",
@@ -154,7 +154,7 @@ The default templates are:
 ```
 ####  error.json.erb
 ``` ruby
-{
+"data":{
   "status": "error",
   "code": <%= @code %>,
   "message": "<%= @message %>"
@@ -165,7 +165,7 @@ The default templates are:
 The gem provides a default error handler in **ApiResponserHelper**:
 ``` ruby
 module ApiResponserHelper
-  def error_handling(code: nil, debug_message: nil, message: nil)
+  def self.error_handling(code: nil, debug_message: nil, message: nil)
     Logger.new(STDOUT).fatal("Error with code #{code}. Debug message: #{debug_message}. Message: #{message}")
   end
 end
@@ -183,8 +183,13 @@ Default localization located in config/locale/en.yml
 
 ## Example
 ```ruby
+
 class ApplicationController < ActionController::Base
+  #include ApiResponser in ApplicationController
   include ApiResponser
+end
+
+class SomeController < ApplicationController
   before_action do
     set_model_variable("ModelName")
   end  

@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = 'api_responser'
-  spec.version       = '1.0.0.7'
+  spec.version       = '1.0.0.8'
   spec.authors       = ['Nazim Mehdiyev']
   spec.email         = ['nazim@mehdiyev.me']
   spec.licenses      = ['MIT']
