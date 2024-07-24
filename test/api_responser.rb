@@ -26,13 +26,13 @@ class TestApiResponser < Minitest::Test
 
     sleep 1
     requests = [
-      { method: "GET",title: "blank item [show]", path: '/item', expected_body: '{"status":"success","code":200,"message":"Show","records":null,"records_count":0}', expected_status:200 },
-      { method: "GET",title: "multiple items [index]", path: '/items', expected_body: '{"status":"success","code":200,"message":"List","records":[],"records_count":0}', expected_status:200 },
-      { method: "POST",title: "create item", path: '/create_item', expected_body: "", expected_status:201 },
+      { method: "GET",title: "blank item [show]", path: '/item', expected_body: '{"data": {"status":"success","code":200,"message":"Show","records":null,"records_count":0}}', expected_status:200 },
+      { method: "GET",title: "multiple items [index]", path: '/items', expected_body: '{"data": {"status":"success","code":200,"message":"List","records":[],"records_count":0}}', expected_status:200 },
+      { method: "POST",title: "create item", path: '/create_item', expected_body: nil, expected_status:201 },
       { method: "POST",title: "update item", path: '/update_item', expected_body: nil, expected_status:204 },
       { method: "POST",title: "delete item", path: '/delete_item', expected_body: nil, expected_status:204 },
-      { method: "GET",title: "exist item [show]", path: '/show_exists_item', expected_body: '{"status":"success","code":200,"message":"Show","records":{"id":1,"name":"Test Name"},"records_count":1}', expected_status:200 },
-      { method: "GET",title: "multiple exist items [index]", path: '/show_exists_items', expected_body: '{"status":"success","code":200,"message":"List","records":[{"id":1,"name":"Test Name 1"},{"id":2,"name":"Test Name 2"}],"records_count":2}', expected_status:200 },
+      { method: "GET",title: "exist item [show]", path: '/show_exists_item', expected_body: '{"data": {"status":"success","code":200,"message":"Show","records":{"id":1,"name":"Test Name"},"records_count":1}}', expected_status:200 },
+      { method: "GET",title: "multiple exist items [index]", path: '/show_exists_items', expected_body: '{"data": {"status":"success","code":200,"message":"List","records":[{"id":1,"name":"Test Name 1"},{"id":2,"name":"Test Name 2"}],"records_count":2}}', expected_status:200 },
       { method: "POST",title: "can't create item", path: '/can_t_create_item', expected_body: nil, expected_status:422 },
       { method: "POST",title: "can't update item", path: '/can_t_update_item', expected_body: nil, expected_status:422 },
       { method: "POST",title: "can't delete item", path: '/can_t_delete_item', expected_body: nil, expected_status:500 },
@@ -99,8 +99,8 @@ class Routes < WEBrick::HTTPServlet::AbstractServlet
     else
       response.body = {error: "Invalid path"}.to_json
     end
-    response.body = resp[:json]
-    response.status = resp[:status]
+    response.body = resp && resp.has_key?(:json) ? resp[:json] : nil
+    response.status = resp && resp.has_key?(:status) ? resp[:status] : nil
   end
 
   def do_GET(request, response)
