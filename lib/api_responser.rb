@@ -11,16 +11,19 @@ module ApiResponser
     success_render(code: 200, message: i18n_message(__method__, status:"success"), records: records)
   end
 
-  def record_created
-    api_success(code: 201)
+  def record_created(records = nil)
+    api_success(code: 201) if records.nil?
+    success_render(code: 201, message: i18n_message(__method__, status:"success"), records: records) unless records.nil?
   end
 
-  def record_updated
-    api_success(code: 204)
+  def record_updated(records = nil)
+    api_success(code: 204) if records.nil?
+    success_render(code: 204, message: i18n_message(__method__, status:"success"), records: records) unless records.nil?
   end
 
-  def record_deleted
-    api_success(code: 204)
+  def record_deleted(records = nil)
+    api_success(code: 204) if records.nil?
+    success_render(code: 204, message: i18n_message(__method__, status:"success"), records: records) unless records.nil?
   end
 
   # Error responses
@@ -48,8 +51,8 @@ module ApiResponser
     error_render(code: 400, message: i18n_message(__method__, status:"error"), debug_message: debug_message, report:report)
   end
 
-  def unauthorized(debug_message = "", report:false)
-    error_render(code: 401, message: i18n_message(__method__, status:"error"), debug_message: debug_message, report:report)
+  def unauthorized(debug_message = "", message: nil,report:false)
+    error_render(code: 401, message: message.nil? ? i18n_message(__method__, status:"error") : message, debug_message: debug_message, report:report)
   end
 
   def forbidden(debug_message = "", report:false)
@@ -105,7 +108,7 @@ module ApiResponser
     @message = message
     @records = records
     @records_count = determine_records_count(records, records_count)
-    {json:ERB.new(file_read("success")).result(binding), status: code}
+    {json: ERB.new(file_read("success")).result(binding), status: code}
   end
 
   def error_render(code: 500, message: "", debug_message: "", report: false)

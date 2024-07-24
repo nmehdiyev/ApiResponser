@@ -122,12 +122,13 @@ def record_not_deleted(message, debug_message = "", report:false)
 The *debug_message* argument is optional.\
 The *report* argument is optional and is useful if you would like to handle *debug_message*.\
 The *debug_message* is useful for providing the real reason for the error (if *report* is **true**). 
+The *message* argument is optional and is useful if you would like to provide your custom message. For example "Incorrect login or password"
 
 ```ruby
 def bad_request(debug_message = "", report:false)
 ```
 ```ruby
-def unauthorized(debug_message = "", report:false)
+def unauthorized(debug_message = "", message:nil, report:false)
 ```
 ```ruby
 def forbidden(debug_message = "", report:false)
