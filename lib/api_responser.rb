@@ -1,3 +1,5 @@
+require 'erb'
+require 'json'
 require 'rails'
 
 require_relative 'api_responser/railtie' if defined?(Rails)
@@ -19,11 +21,12 @@ module ApiResponser
     end
   end
 
+  # 204 No Content must not carry a body, so a response with records is sent as 200.
   def record_updated(records = nil)
     if records.nil?
       api_success(code: 204)
     else
-      success_render(code: 204, message: i18n_message(__method__, status:"success"), records: records)
+      success_render(code: 200, message: i18n_message(__method__, status:"success"), records: records)
     end
   end
 
@@ -31,7 +34,7 @@ module ApiResponser
     if records.nil?
       api_success(code: 204)
     else
-      success_render(code: 204, message: i18n_message(__method__, status:"success"), records: records)
+      success_render(code: 200, message: i18n_message(__method__, status:"success"), records: records)
     end
   end
 
@@ -114,7 +117,7 @@ module ApiResponser
 
   def success_render(code: 200, message: "", records: nil, records_count: nil)
     @code = code
-    @message = message
+    @message = json_escape(message)
     @records = records
     @records_count = determine_records_count(records, records_count)
     {json: ERB.new(file_read("success")).result(binding), status: code}
@@ -122,9 +125,16 @@ module ApiResponser
 
   def error_render(code: 500, message: "", debug_message: "", report: false)
     @code = code
-    @message = message
+    @message = json_escape(message)
     error_handling(code: code, message: message, debug_message: debug_message) if report == true
     {json: ERB.new(file_read("error")).result(binding), status: code}
+  end
+
+  # The JSON templates interpolate @message inside a quoted string literal, so
+  # any quote or backslash in it would otherwise produce unparseable JSON.
+  # to_json gives us the escaped form; the surrounding quotes come from the template.
+  def json_escape(value)
+    value.to_s.to_json[1..-2]
   end
 
   def file_read(type = "error")
@@ -140,7 +150,7 @@ module ApiResponser
   end
 
   def i18n_message(method_name, status:"error", message: nil)
-    message = message.full_messages.join(', ') if message.is_a?(ActiveModel::Errors)
+    message = message.full_messages.join(', ') if message.respond_to?(:full_messages)
     message = message.join(', ') if message.is_a?(Array)
     I18n.t("api_responser.#{status}.#{method_name}", message: message)
   end
@@ -150,6 +160,17 @@ module ApiResponser
   end
 
   def determine_records_count(records, records_count)
-    records_count || ((records.is_a?(ActiveRecord::Relation) || (records.is_a?(Array))) ? records.count : (records.nil? || records.blank? ? 0 : 1))
+    return records_count if records_count
+    return records.count if collection?(records)
+
+    records.blank? ? 0 : 1
+  end
+
+  # ActiveRecord is not necessarily loaded (e.g. an API app with no database),
+  # so the constant is resolved lazily rather than referenced directly.
+  def collection?(records)
+    return true if records.is_a?(Array)
+
+    defined?(ActiveRecord::Relation) && records.is_a?(ActiveRecord::Relation)
   end
 end

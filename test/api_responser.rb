@@ -1,6 +1,7 @@
 require 'minitest/autorun'
 require 'webrick'
 require 'net/http'
+require 'json'
 require_relative "../lib/api_responser"
 require 'active_model'
 require 'active_record'
@@ -33,19 +34,20 @@ class TestApiResponser < Minitest::Test
       { method: "POST",title: "delete item", path: '/delete_item', expected_body: nil, expected_status:204 },
       { method: "GET",title: "exist item [show]", path: '/show_exists_item', expected_body: '{"data": {"status":"success","code":200,"message":"Show","records":{"id":1,"name":"Test Name"},"records_count":1}}', expected_status:200 },
       { method: "GET",title: "multiple exist items [index]", path: '/show_exists_items', expected_body: '{"data": {"status":"success","code":200,"message":"List","records":[{"id":1,"name":"Test Name 1"},{"id":2,"name":"Test Name 2"}],"records_count":2}}', expected_status:200 },
-      { method: "POST",title: "can't create item", path: '/can_t_create_item', expected_body: nil, expected_status:422 },
-      { method: "POST",title: "can't update item", path: '/can_t_update_item', expected_body: nil, expected_status:422 },
-      { method: "POST",title: "can't delete item", path: '/can_t_delete_item', expected_body: nil, expected_status:500 },
-
+      { method: "POST",title: "can't create item", path: '/can_t_create_item', expected_body: '{"data": {"status":"error","code":422,"message":"Can\'t create item. Name should present"}}', expected_status:422 },
+      { method: "POST",title: "can't update item", path: '/can_t_update_item', expected_body: '{"data": {"status":"error","code":422,"message":"Can\'t update item. Name cannot be blank"}}', expected_status:422 },
+      { method: "POST",title: "can't delete item", path: '/can_t_delete_item', expected_body: '{"data": {"status":"error","code":500,"message":"Can\'t delete item.  Not permitted"}}', expected_status:500 },
+      { method: "POST",title: "message containing quotes stays valid JSON", path: '/quoted_message', expected_body: '{"data": {"status":"error","code":422,"message":"He said \\"hi\\" and \\\\ left"}}', expected_status:422 },
     ]
     puts "Checking GET / POST / PUT methods"
     requests.each do |req|
       sleep 0.1
       response = make_request(req[:path], req[:method])
       if req[:expected_body].nil?
-        assert_nil req[:expected_body], response.body
+        assert_empty response.body.to_s, "#{req[:title]} should have no body"
       else
-        assert_equal req[:expected_body], response.body
+        assert_equal req[:expected_body], response.body, req[:title]
+        JSON.parse(response.body) # every rendered body must be valid JSON
       end
       assert_equal req[:expected_status], response.code.to_i
     end
@@ -95,6 +97,8 @@ class Routes < WEBrick::HTTPServlet::AbstractServlet
       resp = controller.record_not_updated("Can't update item. Name cannot be blank", "column 'name' should exists")
     when '/can_t_delete_item'
       resp = controller.record_not_deleted("Can't delete item.  Not permitted", "Action not permitted for user id='123'")
+    when '/quoted_message'
+      resp = controller.record_not_created('He said "hi" and \\ left')
 
     else
       response.body = {error: "Invalid path"}.to_json

@@ -13,6 +13,11 @@ A gem to standardize API responses in Rails applications.
 
 All methods return JSON and status.
 
+## Requirements
+
+- Ruby >= 3.0
+- Rails >= 7.0 (tested against 7.1 and 8.1)
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -43,8 +48,8 @@ end
 
 ## Success Response list
 #### List of Items
-The *records* argument is required and should be an **Array**. The *records_count* argument is an **Integer** and is optional.\
-If *records_count* is not provided, the count will be calculated from the size of the *records* array
+The *records* argument is required and should be an **Array** or an **ActiveRecord::Relation**. The *records_count* argument is an **Integer** and is optional.\
+If *records_count* is not provided, the count will be calculated from the size of *records*. This is useful for pagination, where the rendered page is smaller than the total count
 ```ruby
 def record_index(records, records_count = nil)
 ```
@@ -54,15 +59,23 @@ The *records* argument should be a **Hash**. It should contain only one model
 def record_show(records)
 ```
 #### Item Create / Item Update / Item Delete
-*No arguments* are required
+The *records* argument is optional.
+
+When called *without arguments*, the response has no body and only a status code is returned
+(**201** for create, **204 No Content** for update and delete).
+
+When *records* are passed, the created/updated/deleted record is rendered in the response body
+(**201** for create, **200** for update and delete). Update and delete use **200** rather than **204**
+in this case, because a 204 No Content response is not allowed to carry a body.
+
 ```ruby
-def record_created
+def record_created(records = nil)
 ```
 ```ruby
-def record_updated
+def record_updated(records = nil)
 ```
 ```ruby
-def record_deleted
+def record_deleted(records = nil)
 ```
 
 
@@ -108,6 +121,11 @@ The *message* argument is required, while the *debug_message* argument is option
 The *report* argument is optional and is useful if you would like to handle *debug_message*.\
 The *message* argument is used to output a message in the JSON response, whereas *debug_message* is useful for providing the real reason for the error (if *report* is **true**). 
 
+The *message* argument accepts a **String**, an **Array** of strings, or a model's
+**errors** object (e.g. `item.errors`), which is joined into a single sentence.
+Messages are escaped before being rendered, so text containing quotes, backslashes
+or newlines is safe to pass through.
+
 ```ruby
 def record_not_created(message, debug_message = "", report:false)
 ```
@@ -145,22 +163,28 @@ Templates should be located in **app/views/api_responser/**
 The default templates are:
 #### success.json.erb
 ``` ruby
-"data":{
+{"data": {
   "status": "success",
   "code": <%= @code %>,
   "message": "<%= @message %>",
   "records": <%= @records.to_json %>,
   "records_count": <%= @records_count %>
-}
+}}
 ```
 ####  error.json.erb
 ``` ruby
-"data":{
+{"data": {
   "status": "error",
   "code": <%= @code %>,
   "message": "<%= @message %>"
-}
+}}
 ```
+
+**Note on `@message` in custom templates:** `@message` arrives already escaped for
+JSON, so quotes, backslashes and newlines in a message are safe. It is escaped as
+*string contents only* — the surrounding quotes come from the template, so keep
+`@message` wrapped in `"` as shown above. Values you add yourself should be passed
+through `to_json` (as `@records` is) so the rendered body stays valid JSON.
 
 ## Customizing Error Handling
 The gem provides a default error handler in **ApiResponserHelper**:
@@ -172,7 +196,7 @@ module ApiResponserHelper
 end
 ```
 You can customize this method to handle errors in a way that suits your application's requirements. For example, you might want to log errors to a file or send notifications to an external service.
-Helper should be located in **app/helpers/app_responser_helper.rb**
+Helper should be located in **app/helpers/api_responser_helper.rb**
 
 
 ## Localization
